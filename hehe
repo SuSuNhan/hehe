@@ -1,0 +1,126 @@
+-- Load UI Library
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("[Clone Kingdom Tycoon Script] Created by Ephide and Therapist", "Ocean")
+
+-- Create tabs and sections
+local TabClone = Window:NewTab("SCRIPT")
+local SectionClone = TabClone:NewSection("Summon Clone")
+local SectionOther = TabClone:NewSection("Crates [After toggling, lean near the red area of the furnace]")
+
+-- Find the player's tycoon
+local tycoon = nil
+local player = game.Players.LocalPlayer
+
+for _, child in ipairs(game.Workspace.TycoonMain.Tycoons:GetChildren()) do
+    if child:FindFirstChild("Owner") and child.Owner.Value == player.Name then
+        tycoon = child.Name
+        break
+    end
+end
+
+-- Check if the tycoon exists
+if not tycoon then
+    print("No matching child found.")
+    return
+end
+
+-- Toggle for summoning Tyrant in "Summon Clone" section
+local summonTyrantEnabled = false
+local ToggleSummonTyrant = SectionClone:NewToggle("Summon Tyrant", "Summons tyrant", function(state)
+    summonTyrantEnabled = state
+end)
+
+spawn(function()
+    while true do
+        if summonTyrantEnabled then
+            local args = {
+                [1] = game.Workspace.TycoonMain.Tycoons[tycoon],
+                [2] = game.Workspace.TycoonMain.Tycoons[tycoon].Essentials.TyrantPath
+            }
+
+            game:GetService("ReplicatedStorage").remotes.trySummonTyrant:FireServer(unpack(args))
+        end
+        wait(1)
+    end
+end)
+
+-- Toggle for summoning Sorcerer in "Summon Clone" section
+local summonSorcererEnabled = false
+local ToggleSummonSorcerer = SectionClone:NewToggle("Summon Sorcerer", "Toggle for summoning sorcerer", function(state)
+    summonSorcererEnabled = state
+end)
+
+spawn(function()
+    while true do
+        if summonSorcererEnabled then
+            local args = {
+                [1] = game.Workspace.TycoonMain.Tycoons[tycoon],
+                [2] = game.Workspace.TycoonMain.Tycoons[tycoon].Essentials.SorcererPath
+            }
+
+            game:GetService("ReplicatedStorage").remotes.trySummonSorcerer:FireServer(unpack(args))
+        end
+
+        wait(1)
+    end
+end)
+
+-- Toggle for picking up Wooden Crate in "Crates" section
+local pickUpWoodenCrateEnabled = false
+local pickUpGoldenCrateEnabled = false
+local pickUpLegendaryCrateEnabled = false
+
+local TogglePickUpCrate = SectionOther:NewToggle("Pick Up Wooden Crate", "Toggle for picking up wooden crate", function(state)
+    pickUpWoodenCrateEnabled = state
+end)
+
+local TogglePickUpGoldenCrate = SectionOther:NewToggle("Pick Up Golden Crate", "Toggle for picking up golden crate", function(state)
+    pickUpGoldenCrateEnabled = state
+end)
+
+local TogglePickUpLegendaryCrate = SectionOther:NewToggle("Pick Up Legendary Crate", "Toggle for picking up legendary crate", function(state)
+    pickUpLegendaryCrateEnabled = state
+end)
+
+local function pickUpCrate(crate)
+    local success, message = pcall(function()
+        game:GetService("ReplicatedStorage").remotes.PickUp:FireServer(crate)
+    end)
+    
+    if not success then
+        print("An error occurred while picking up the crate:", message)
+    end
+end
+
+spawn(function()
+    while true do
+        if pickUpWoodenCrateEnabled then
+            local crates = workspace.TycoonMain.Tycoons[tycoon].Essentials.Crates:GetChildren()
+            for _, crate in ipairs(crates) do
+                if crate.Name == "WoodenCrate" then
+                    pickUpCrate(crate)
+                end
+            end
+        end
+        
+        if pickUpGoldenCrateEnabled then
+            local crates = workspace.TycoonMain.Tycoons[tycoon].Essentials.Crates:GetChildren()
+            for _, crate in ipairs(crates) do
+                if crate.Name == "GoldenCrate" then
+                    pickUpCrate(crate)
+                end
+            end
+        end
+        
+        if pickUpLegendaryCrateEnabled then
+            local crates = workspace.TycoonMain.Tycoons[tycoon].Essentials.Crates:GetChildren()
+            for _, crate in ipairs(crates) do
+                if crate.Name == "LegendaryCrate" then
+                    pickUpCrate(crate)
+                end
+            end
+        end
+
+        wait(0.2)
+    end
+end)
